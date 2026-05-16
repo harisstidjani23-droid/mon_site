@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h2 class="mb-4"><i class="bi bi-file-text"></i> Articles</h2>
+    
+    {% if articles %}
+        <div class="row">
+            {% for article in articles %}
+            <div class="col-md-6 mb-4">
+                <div class="card h-100 shadow-sm">
+                    <img src="https://picsum.photos/seed/{{ article[0] }}/400/200" class="card-img-top" alt="Image de l'article" style="height: 200px; object-fit: cover;">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ article[1] }}</h5>
+                        <p class="card-text text-muted">
+                            <small>
+                                <i class="bi bi-person"></i> {{ article[5] }} 
+{{ article[3].strftime('%d/%m/%Y à %H:%M') if article[3] else '' }}
+                            </small>
+                        </p>
+                        <p class="card-text">
+                            {% if article[2]|length > 150 %}
+                                {{ article[2][:150] }}...
+                                <a href="/modifier_article/{{ article[0] }}" class="text-primary">Lire la suite</a>
+                            {% else %}
+                                {{ article[2] }}
+                            {% endif %}
+                        </p>
+                    </div>
+                    {% if session['role'] == 'admin' or session['user_id'] == article[4] %}
+                    <div class="card-footer">
+                        <a href="/modifier_article/{{ article[0] }}" class="btn btn-warning btn-sm">
+                            <i class="bi bi-pencil"></i> Modifier
+                        </a>
+                        <form method="POST" action="/supprimer_article/{{ article[0] }}" style="display: inline-block;" onsubmit="return confirm('Supprimer cet article ?');">
+                            <button type="submit" class="btn btn-danger btn-sm">
+                                <i class="bi bi-trash"></i> Supprimer
+                            </button>
+                        </form>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i> Aucun article pour le moment. Sois le premier à écrire !
+            <a href="/nouvel_article" class="btn btn-success btn-sm ms-2">
+                <i class="bi bi-plus-circle"></i> Créer un article
+            </a>
+        </div>
+    {% endif %}
+{% endblock %}

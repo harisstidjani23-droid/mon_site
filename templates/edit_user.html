@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="text-center">Modifier l'utilisateur</h3>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('modifier', user_id=user_id) }}" id="editForm">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Nom d'utilisateur :</label>
+                        <input type="text" class="form-control" id="username" name="username" value="{{ user[1] }}" required minlength="3">
+                        <div class="invalid-feedback"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email :</label>
+                        <input type="email" class="form-control" id="email" name="email" value="{{ user[2] }}" required>
+                        <div class="invalid-feedback" id="emailFeedback"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Nouveau mot de passe (laisser vide pour ne pas changer, min 8 caractères) :</label>
+                        <div class="input-group">
+                            <input type="password" class="form-control" id="password" name="password" minlength="8">
+                            <button class="btn btn-outline-secondary toggle-password" type="button" data-target="#password">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
+                        <div class="invalid-feedback"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="confirm_password" class="form-label">Confirmer le nouveau mot de passe :</label>
+                        <div class="input-group">
+                            <input type="password" class="form-control" id="confirm_password" name="confirm_password" minlength="8">
+                            <button class="btn btn-outline-secondary toggle-password" type="button" data-target="#confirm_password">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
+                        <div class="invalid-feedback" id="confirmFeedback"></div>
+                    </div>
+                    <a href="{{ url_for('users') }}" class="btn btn-secondary w-100 mb-2">Annuler</a>
+                    <button type="submit" class="btn btn-primary w-100" id="submitBtn">Modifier</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const passwordInput = document.getElementById('password');
+    const confirmInput = document.getElementById('confirm_password');
+    const emailInput = document.getElementById('email');
+    const emailFeedback = document.getElementById('emailFeedback');
+    const confirmFeedback = document.getElementById('confirmFeedback');
+    const submitBtn = document.getElementById('submitBtn');
+    const form = document.getElementById('editForm');
+
+    // Toggle password
+    document.querySelectorAll('.toggle-password').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const target = document.querySelector(this.dataset.target);
+            const icon = this.querySelector('i');
+            if (target.type === 'password') {
+                target.type = 'text';
+                icon.classList.replace('bi-eye', 'bi-eye-slash');
+            } else {
+                target.type = 'password';
+                icon.classList.replace('bi-eye-slash', 'bi-eye');
+            }
+        });
+    });
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    emailInput.addEventListener('input', function() {
+        if (this.value && !emailRegex.test(this.value)) {
+            this.classList.add('is-invalid');
+            emailFeedback.textContent = "Format email invalide";
+            emailFeedback.style.display = 'block';
+        } else {
+            this.classList.remove('is-invalid');
+            emailFeedback.style.display = 'none';
+        }
+    });
+
+    // Password confirm
+    function validateConfirm() {
+        const pwd = passwordInput.value;
+        if (pwd) {  // Only if password entered
+            if (confirmInput.value !== pwd) {
+                confirmInput.classList.add('is-invalid');
+                confirmFeedback.textContent = "Mots de passe ne correspondent pas";
+                confirmFeedback.style.display = 'block';
+                return false;
+            } else if (pwd.length < 8) {
+                passwordInput.classList.add('is-invalid');
+                return false;
+            }
+        }
+        confirmInput.classList.remove('is-invalid');
+        confirmFeedback.style.display = 'none';
+        passwordInput.classList.remove('is-invalid');
+        return true;
+    }
+
+    passwordInput.addEventListener('input', validateConfirm);
+    confirmInput.addEventListener('input', validateConfirm);
+
+    form.addEventListener('submit', function(e) {
+        if (!emailRegex.test(emailInput.value)) {
+            e.preventDefault();
+            return false;
+        }
+        const pwd = passwordInput.value;
+        if (pwd && (pwd.length < 8 || pwd !== confirmInput.value)) {
+            e.preventDefault();
+            return false;
+        }
+    });
+});
+</script>
+
+<style>
+.toggle-password:hover { background-color: #f8f9fa; }
+</style>
+{% endblock %}
