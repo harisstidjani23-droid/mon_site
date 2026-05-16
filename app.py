@@ -9,12 +9,26 @@ app.secret_key = os.environ.get('SECRET_KEY') or 'dev-secret-change-in-prod'
 
 
 def get_db_connection():
-    return mysql.connector.connect(
-        host=config.MYSQL_HOST,
-        user=config.MYSQL_USER,
-        password=config.MYSQL_PASSWORD,
-        database=config.MYSQL_DB,
-    )
+    try:
+        return mysql.connector.connect(
+            host=config.MYSQL_HOST,
+            port=getattr(config, 'MYSQL_PORT', 3306),
+            user=config.MYSQL_USER,
+            password=config.MYSQL_PASSWORD,
+            database=config.MYSQL_DB,
+            connection_timeout=5,
+        )
+    except mysql.connector.Error as e:
+        # Log a helpful message for debugging; avoid leaking password.
+        app.logger.error(
+            "Database connection failed: host=%s port=%s db=%s error=%r",
+            getattr(config, 'MYSQL_HOST', None),
+            getattr(config, 'MYSQL_PORT', 3306),
+            getattr(config, 'MYSQL_DB', None),
+            e,
+        )
+        raise
+
 
 
 @app.route('/')
