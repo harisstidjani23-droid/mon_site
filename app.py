@@ -13,7 +13,8 @@ app.config['MYSQL_PASSWORD'] = config.MYSQL_PASSWORD
 app.config['MYSQL_DB'] = config.MYSQL_DB
 
 mysql = MySQL(app)
-
+#hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
+#ddddddddddd
 @app.route('/')
 def home():
     return redirect(url_for('login'))
