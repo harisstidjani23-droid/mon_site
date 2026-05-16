@@ -1,0 +1,6 @@
+{
+  "project": "mon_site",
+  "start": "gunicorn app:app --bind 0.0.0.0:$PORT",
+  "notes": "Configure la DB MySQL via les variables d'environnement (MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DB) dans Railway."
+}
+

@@ -83,11 +83,21 @@ def login():
 def users():
     if 'user' not in session:
         return redirect(url_for('login'))
+
     cur = mysql.connection.cursor()
-    cur.execute("SELECT * FROM users")
-    all_users = cur.fetchall()
+
+    # Seul l'admin voit toute la liste des utilisateurs
+    if session.get('role') == 'admin':
+        cur.execute("SELECT * FROM users")
+        all_users = cur.fetchall()
+    else:
+        # Pour les non-admin: afficher uniquement l'utilisateur connecté
+        cur.execute("SELECT * FROM users WHERE id = %s", (session.get('user_id'),))
+        all_users = cur.fetchall()
+
     cur.close()
     return render_template('users.html', users=all_users)
+
 
 @app.route('/logout')
 def logout():
@@ -128,11 +138,31 @@ def articles():
     if 'user' not in session:
         flash('Veuillez vous connecter.', 'error')
         return redirect(url_for('login'))
+
     cur = mysql.connection.cursor()
-    cur.execute("SELECT a.id, a.titre, a.contenu, a.date_creation, a.user_id, u.username FROM articles a JOIN users u ON a.user_id = u.id ORDER BY a.date_creation DESC")
+
+    # Seul l'admin voit tous les articles. Les autres voient uniquement leurs articles.
+    if session.get('role') == 'admin':
+        cur.execute(
+            """SELECT a.id, a.titre, a.contenu, a.date_creation, a.user_id, u.username
+               FROM articles a
+               JOIN users u ON a.user_id = u.id
+               ORDER BY a.date_creation DESC"""
+        )
+    else:
+        cur.execute(
+            """SELECT a.id, a.titre, a.contenu, a.date_creation, a.user_id, u.username
+               FROM articles a
+               JOIN users u ON a.user_id = u.id
+               WHERE a.user_id = %s
+               ORDER BY a.date_creation DESC""",
+            (session.get('user_id'),)
+        )
+
     all_articles = cur.fetchall()
     cur.close()
     return render_template('articles.html', articles=all_articles)
+
 
 @app.route('/nouvel_article', methods=['GET', 'POST'])
 def nouvel_article():
