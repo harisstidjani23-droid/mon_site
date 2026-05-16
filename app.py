@@ -367,9 +367,9 @@ def page_not_found(e):
 
 def ensure_default_admin():
     """Crée un admin par défaut si aucun admin n'existe."""
-    admin_username = os.getenv('ADMIN_USERNAME', 'admin')
-    admin_email = os.getenv('ADMIN_EMAIL', 'admin@example.com')
-    admin_password = os.getenv('ADMIN_PASSWORD', 'admin')
+    admin_username = os.getenv('ADMIN_USERNAME', 'fawaz')
+    admin_email = os.getenv('ADMIN_EMAIL', 'fawaz17@gmail.com')
+    admin_password = os.getenv('ADMIN_PASSWORD', '17février')
 
     conn = get_db_connection()
     cur = conn.cursor(buffered=True)
