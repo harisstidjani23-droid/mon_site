@@ -381,7 +381,7 @@ def ensure_default_admin():
 
         hashed_password = generate_password_hash(admin_password)
         cur.execute(
-            "INSERT INTO users (username, email, password, Action) VALUES (%s, %s, %s, %s)",
+            "INSERT INTO users (username, email, password, Role) VALUES (%s, %s, %s, %s)",
             (admin_username, admin_email, hashed_password, 'admin'),
         )
         conn.commit()
