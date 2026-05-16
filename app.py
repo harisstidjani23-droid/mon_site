@@ -365,5 +365,38 @@ def modifier(user_id):
 def page_not_found(e):
     return render_template('404.html'), 404
 
+def ensure_default_admin():
+    """Crée un admin par défaut si aucun admin n'existe."""
+    admin_username = os.getenv('ADMIN_USERNAME', 'admin')
+    admin_email = os.getenv('ADMIN_EMAIL', 'admin@example.com')
+    admin_password = os.getenv('ADMIN_PASSWORD', 'admin')
+
+    conn = get_db_connection()
+    cur = conn.cursor(buffered=True)
+    try:
+        # Dans cette app, le rôle est stocké dans la colonne `Action` (et login utilise user[5])
+        cur.execute("SELECT COUNT(*) FROM users WHERE Action = %s", ('admin',))
+        if cur.fetchone()[0] > 0:
+            return
+
+        hashed_password = generate_password_hash(admin_password)
+        cur.execute(
+            "INSERT INTO users (username, email, password, Action) VALUES (%s, %s, %s, %s)",
+            (admin_username, admin_email, hashed_password, 'admin'),
+        )
+        conn.commit()
+        app.logger.info('Default admin created: %s', admin_email)
+    except Exception as e:
+        conn.rollback()
+        app.logger.error('Failed to create default admin: %r', e)
+        raise
+    finally:
+        cur.close()
+        conn.close()
+
+
+ensure_default_admin()
+
 if __name__ == '__main__':
     app.run(debug=True)
+
