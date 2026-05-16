@@ -1,20 +1,27 @@
 import os
+import mysql.connector
 from flask import Flask, render_template, request, redirect, session, url_for, flash
-from flask_mysqldb import MySQL
 from werkzeug.security import generate_password_hash, check_password_hash
 import config
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY') or 'dev-secret-change-in-prod'
 
-app.config['MYSQL_HOST'] = config.MYSQL_HOST
-app.config['MYSQL_USER'] = config.MYSQL_USER
-app.config['MYSQL_PASSWORD'] = config.MYSQL_PASSWORD
-app.config['MYSQL_DB'] = config.MYSQL_DB
 
-mysql = MySQL(app)
-#hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
-#ddddddddddd
+def get_db_connection():
+    return mysql.connector.connect(
+        host=config.MYSQL_HOST,
+        user=config.MYSQL_USER,
+        password=config.MYSQL_PASSWORD,
+        database=config.MYSQL_DB,
+    )
+
+
+def db_cursor():
+    conn = get_db_connection()
+    cur = conn.cursor(buffered=True)
+    return conn, cur
+
 @app.route('/')
 def home():
     return redirect(url_for('login'))
@@ -31,28 +38,33 @@ def register():
             flash('Les mots de passe ne correspondent pas.', 'error')
             return render_template('register.html')
 
-        cur = mysql.connection.cursor()
+        conn = get_db_connection()
+        cur = conn.cursor(buffered=True)
+
 
         cur.execute("SELECT COUNT(*) FROM users WHERE email = %s", (email,))
         if cur.fetchone()[0] > 0:
             flash('Cet email est déjà utilisé.', 'error')
             cur.close()
+            conn.close()
             return render_template('register.html')
 
         cur.execute("SELECT COUNT(*) FROM users WHERE username = %s", (username,))
         if cur.fetchone()[0] > 0:
             flash('Ce nom d\'utilisateur est déjà pris.', 'error')
             cur.close()
+            conn.close()
             return render_template('register.html')
 
         try:
             hashed_password = generate_password_hash(password)
             cur.execute("INSERT INTO users (username, email, password, Action) VALUES (%s, %s, %s, %s)", (username, email, hashed_password, 'active'))
-            mysql.connection.commit()
+            conn.commit()
             session['user'] = username
             session['user_id'] = cur.lastrowid
             session['role'] = 'user'
             cur.close()
+            conn.close()
             return redirect(url_for('users'))
         except Exception as e:
             flash('Erreur lors de l\'inscription. Veuillez réessayer.', 'error')
@@ -66,7 +78,8 @@ def login():
     if request.method == 'POST':
         email = request.form['email']
         password = request.form['password']
-        cur = mysql.connection.cursor()
+        conn = get_db_connection()
+        cur = conn.cursor(buffered=True)
         cur.execute("SELECT * FROM users WHERE email = %s", [email])
         user = cur.fetchone()
         cur.close()
